@@ -1,0 +1,27 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gateway
+  # 해당 리소스가 배포될 네임스페이스 지정(NGF에서 지정한 네임스페이스와 동일해야 한다.)
+  namespace: nginx-gateway
+spec:
+  # 해당 게이트웨이가 실제로 구동하고 처리할 컨트롤러(GatewayClass)를 nginx로 지정
+  gatewayClassName: nginx
+  # 외부에서 들어오는 트래픽을 수신할 네트워크 포트와 프로토콜 규칙을 정의
+  listeners:
+  - name: client      # 리스너의 ID 지정
+    port: 5173        # 5173 포트로 들어오는 트래픽을 수신하기 위한 설정
+    protocol: HTTP    # 트래픽 프로토콜을 HTTP로 지정
+    allowedRoutes:    # 해당 리스너에 연결할 수 있는 HTTPRoute 범위 설정
+      namespaces:
+        from: All     # 클러스터 내의 모든 네임스페이스에서 해당 리스너를 참조하고 라우팅 처리하도록 지정
+  - name: scg
+    port: 8080
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: All
+
+# 아래 명령어로 적용 및 확인 (PROGRAMMED: True 여야 함)
+# kubectl apply -f 02-gateway.yaml
+# kubectl get gateway -n nginx-gateway

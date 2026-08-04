@@ -1,0 +1,10 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: nginx
+spec:
+  controllerName: gateway.nginx.org/nginx-gateway-controller
+
+# 아래 명령어로 적용 및 확인 (ACCEPTED: True 여야 함)
+# kubectl apply -f 01-gateway-class.yaml
+# kubectl get gatewayclass
