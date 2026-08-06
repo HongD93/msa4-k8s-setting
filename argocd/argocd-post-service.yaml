@@ -1,0 +1,41 @@
+# apiVersion: ArgoCD가 제공하는 커스텀 리소스(CRD)의 API 그룹/버전
+apiVersion: argoproj.io/v1alpha1
+# kind: Application. "어떤 git 저장소의 어떤 경로를, 어느 클러스터/네임스페이스에, 어떤 정책으로 동기화할지"를 정의하는 ArgoCD의 핵심 리소스
+kind: Application
+metadata:
+  # metadata.name: 이 Application 리소스의 이름. ArgoCD UI/CLI에서 이 이름으로 앱을 식별하고 관리
+  name: post-service-app
+  # metadata.namespace: Application 리소스 자체가 위치할 네임스페이스.
+  # ArgoCD 컨트롤러가 감시(watch)하는 네임스페이스(보통 argocd가 설치된 "argocd")에 있어야 인식됨
+  # (배포 대상 네임스페이스와는 다른 개념 - 배포 대상은 아래 spec.destination.namespace)
+  namespace: argocd
+spec:
+  # spec.project: 이 Application이 속한 ArgoCD AppProject 이름.
+  # 프로젝트별로 배포 가능한 저장소/클러스터/네임스페이스 등을 제한할 수 있음. "default"는 기본 제공되는 제약 없는 프로젝트
+  project: default
+  # spec.source: 매니페스트를 가져올 소스(git 저장소) 정보
+  source:
+    # repoURL: 매니페스트가 들어있는 git 저장소 주소
+    repoURL: git@github.com:HongD93/msa4-k8s-manifest.git
+    # targetRevision: 추적할 브랜치/태그/커밋. 여기서는 master 브랜치의 최신 커밋을 계속 추적
+    targetRevision: master
+    # path: 저장소 안에서 이 Application이 배포할 매니페스트가 있는 하위 경로 (scg 폴더의 yaml들)
+    path: post
+  # spec.destination: 매니페스트를 실제로 적용(배포)할 대상 클러스터/네임스페이스
+  destination:
+    # server: 대상 클러스터의 API 서버 주소. "https://kubernetes.default.svc"는 ArgoCD가 설치된 클러스터 자기 자신을 가리키는 특수 값
+    server: https://kubernetes.default.svc
+    # namespace: 배포 대상 네임스페이스
+    namespace: msa4-meerkatgram
+  # spec.syncPolicy: 동기화(git 변경사항을 클러스터에 반영) 정책
+  syncPolicy:
+    # automated: 수동으로 "Sync" 버튼을 누르지 않아도 git 변경을 자동으로 클러스터에 반영
+    automated:
+      # prune: true - git에서 삭제된 리소스는 클러스터에서도 자동으로 삭제
+      prune: true
+      # selfHeal: true - 클러스터에서 직접(kubectl 등으로) 수동으로 변경한 내용이 있어도 git 상태로 자동 되돌림(드리프트 방지)
+      selfHeal: true
+    # syncOptions: 동기화 동작에 대한 추가 옵션 목록
+    syncOptions:
+      # CreateNamespace=true - destination.namespace가 클러스터에 없으면 자동으로 생성
+      - CreateNamespace=true
